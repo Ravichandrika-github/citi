@@ -1,0 +1,476 @@
+################ Day 1
+#### Git repository link for hands-on folders
+https://github.com/anurag-chiplunkar/Citi-Bank-Docker-Kubernetes-Openshift/tree/main
+
+npm init
+npm install express
+node app.js
+
+#### Docker file
+FROM node:14
+
+WORKDIR /app
+
+COPY package.json .
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD [ "node", "app.js" ]
+
+
+build docker image - 'docker build .'
+run the docker image - 'docker run <imageName>
+to check the running containers - 'docker ps'
+stop the running container immediately - 'docker kill [containerID]'
+stop the running container - 'docker stop [containerID]'
+to check all images - 'docker images'
+to check all processes - 'docker ps -a'
+to start a stopped container - 'docker start [<containerName>] or containerID'
+to start container in detached mode - 'docker run -d -p exposedDockerPort:applicationServerPort imageName'
+to get attached to a container in attach mode - 'docker attach conatinerName'
+to remove one or more containers (stopped containers) - 'docker rm [containerName]'
+to remove one or more images (not connected to any running container) - 'docker rmi [imageName]' 
+to remove a container once it is stopped/killed - 'docker run -d -p exposedDockerPort:serverPort --rm imageName'
+to name a container - 'docker --name name imageName'
+ 		name:tag
+name - Defines a group of images (eg. node)
+tag - Defines a specialized image within a group of images (eg. 14)
+
+to give name and tag to an image - 'docker build -t name:tag .'
+to start a container with custom imagename - 'docker run -p 80:3000 -d --rm --name nodecontainer name:tag'
+to give name and tag to an image - 'docker build -t name:tag .'
+to start a container with custom imagename - 'docker run -p 80:3000 -d --rm --name nodecontainer name:tag'
+
+#### Day 2
+to delete all unused images - 'docker image prune -a'
+to delete all unused container - docker container prune
+to rename the existing image - docker tag 'oldImageName:tag' 'newImageName'
+to push local image to dockerhub
+login using - 'docker login'node server.js
+enter usename and password
+push the local image - 'docker push imageName'
+sudo docker build -t brainstrom/democitiimage .
+
+
+### Docker Volume
+npm init
+npm install express fs path body-parser
+node server.js
+
+
+Volumes
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json .
+
+RUN npm install
+
+COPY . .
+
+VOLUME [ "namedVolume:/app/feedback" ]
+
+EXPOSE 8000
+
+CMD [ "node", "server.js" ]
+
+
+
+1. inside the 3 Docker Volumes folder - npm init
+2. inside the 3 Docker Volumes folder - npm install express fs path body-parser
+3. create docker image
+4. create a container with the newly created image
+5. stop the conatiner
+6. restart the container - docker start containerName
+7. then kill the container
+8. remove it
+9. re-create new container, then check the previously available data.
+10. to create anonymous volume; inside the docker file add VOLUME [ "/app/feedback ]
+11. to list all available volumes - docker volume ls
+12. to remove unused volumes - docker volume prune
+13. to create named volumes - docker run -d -p 8000:8000 --name feedback-con -v feedback:/app/feedback feedback-app:1.0
+
+
+### Networking
+1. npm init
+2. npm install express axios body-parser mongoose 
+3. node app.js
+2.1 download the mongo image and also run it using: docker run --name <containerName> -d mongo:4
+4. inspect the mongo container: "sudo docker container inspect <mongo container name>"
+5. copy the ip address and paste it in the app.js code
+6. create the image of the app.js code
+7. run the app container 
+{
+  "type": "movie",
+  "name": "A New Hope",
+  "url": "https://swapi.dev/api/films/1/"
+}
+
+--------------- Networking
+1. npm init
+2. npm install express axios body-parser mongoose 
+2.1 download the mongo image and also run it using: docker run --name <containerName> -d mongo:4
+3. to create a common network - 'docker network create <networkName>'
+4. to get network help - 'docker network --help'
+5. to list all existing networks - 'docker network ls'
+6. to create mongodb container in the network - 'docker run -d --name mongodb --network favorites-net mongo'
+6.1 change the ip of database container to name of the database container in the code and recreate the image of the application.
+7. to start a container inside the same network - 'docker run --name favorites-container --network favorites-net -p 3000:3000 favorites:image'
+
+
+
+
+
+sudo minikube start --vm-driver=docker --force
+sudo minikube status
+sudo minikube dashboard
+
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: second-app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: second-app
+      tier: backend
+  template:
+    metadata: 
+      labels:
+        app: second-app
+        tier: backend
+    spec: 
+      containers:
+        - name: second-node
+          image: brainstrom/declarative:1.0
+        # - name: ...
+        #   image: ...
+
+
+sudo kubectl apply -f deployment.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  selector: 
+    app: second-app
+  ports:
+    - protocol: 'TCP'
+      port: 80   # to be exposed
+      targetPort: 8000  # my application is listening on
+    # - protocol: 'TCP'
+    #   port: 443
+    #   targetPort: 443
+  type: LoadBalancer
+  
+sudo kubectl apply -f service.yaml
+sudo minikube service backend
+
+kubectl scale deployment/first-app --replicas=3
+
+
+
+
+################6 Kubernetes Presistent Volumes
+npm init
+npm install express fs path body-parser
+node app.js
+{
+    "text": "This is the first story."
+}
+
+https://kubernetes.io/docs/concepts/storage/volumes/#hostpath
+
+###### Day 5
+------------------------deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: story-deployment
+spec: 
+  replicas: 2
+  selector:
+    matchLabels:
+      app: story
+  template:
+    metadata:
+      labels:
+        app: story
+    spec:
+      containers:
+        - name: story
+          image: brainstrom/declarative:3.0
+          volumeMounts:
+            - mountPath: /app/story
+              name: story-volume
+      volumes:
+        - name: story-volume
+          persistentVolumeClaim:
+            claimName: host-pvc
+            
+-------------------------host-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: host-pv
+spec:
+  capacity: 
+    storage: 1Gi
+  volumeMode: Filesystem
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data
+    type: DirectoryOrCreate
+    
+---------------------------host-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: host-pvc
+spec:
+  volumeName: host-pv
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests: 
+      storage: 1Gi
+      
+----------------------------service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: story-service
+spec:
+  selector: 
+    app: story
+  type: LoadBalancer
+  ports:
+    - protocol: "TCP"
+      port: 80
+      targetPort: 3000
+      
+--------------------------------------deployment steps
+sudo kubectl apply -f host-pv.yaml
+sudo kubectl apply -f host-pvc.yaml
+sudo kubectl apply -f deployment.yaml
+sudo kubectl apply -f service.yaml 
+sudo minikube service story-service
+
+---------------------to verify the volume
+sudo kubectl delete deployment/story-deployment
+sudo kubectl apply -f deployment.yaml
+
+
+
+#################### Config files
+
+-----------------------------------------example.py
+import os
+
+for i in range(5):
+    config_value = os.environ.get("CONFIG_VALUE", "default_value")
+    print("Config Value:", config_value)
+
+
+---------------------------docker file
+FROM python:3.8-alpine 
+
+WORKDIR /app
+
+COPY . /app
+
+# RUN pip install --no-cache-dir -r requirements.txt
+
+ENV CONFIG_VALUE="default_value"
+
+CMD [ "python", "example.py" ]
+
+---------------------------deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-python-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-python-app
+  template:
+    metadata:
+      labels:
+        app: my-python-app
+    spec:
+      containers:
+        - name: my-python-app
+          image: brainstrom/config-example:2.0
+          env:
+            - name: CONFIG_VALUE
+              valueFrom:
+                configMapKeyRef:
+                  name: my-config
+                  key: CONFIG_VALUE
+
+
+--------------------------config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-config
+data:
+  CONFIG_VALUE: my_config_value_from_config_map_yaml_file
+
+
+################## Sceret
+------------------docker file
+FROM python:3.8-alpine 
+
+WORKDIR /app
+
+COPY . /app
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+CMD [ "python", "example.py" ]
+
+-----------------------------------create a base 64 secret key
+echo -n "your-api-key-here" | base64
+
+--------------------------------secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-key-secret
+type: Opaque
+data:
+  api_key: TmV3IFNlY3JldCBLZXk=
+  
+---------------------------deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+        - name: flask-app
+          image: brainstrom/secrets-example:1.0
+          ports:
+            - containerPort: 8000
+          env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-key-secret
+                  key: api_key
+
+------------------------service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-app-service
+spec:
+  selector:
+    app: flask-app
+  ports:
+    - protocol: 'TCP'
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
+
+
+-------------------requirements.txt
+flask==2.3.3
+
+-------------------------execution steps
+kubectl apply -f api-key-secret.yaml
+kubectl apply -f flask-deployment.yaml
+
+
+kubectl apply -f flask-service.yaml
+
+
+minikube service flask-app-service --url
+
+
+############### multicontainer
+-------------------------docker file
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json .
+
+RUN npm install
+
+COPY . .
+
+# VOLUME [ "namedVolume:/app/feedback" ]
+
+EXPOSE 8000
+
+CMD [ "node", "server.js" ]
+
+
+------------------deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+    spec:
+      containers:
+        - name: flask-app
+          image: <your-registry>/flask-app:v1
+          ports:
+            - containerPort: 8000
+          # env:
+            # - name: REDIS_HOST
+            #   value: "localhost"  # Use "localhost" as the Redis host since both containers are in the same pod.
+        - name: redis
+          image: redis:latest
+          ports:
+            - containerPort: 6379
+
+---------------service
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-app-service
+spec:
+  selector:
+    app: flask-app
+  ports:
+    - protocol: 'TCP'
+      port: 80
+      targetPort: 8080
+  type: LoadBalancer
